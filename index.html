@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PromoEngine — Loyalty Promotions Platform</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #232633;
+      --border: #2e3244;
+      --text: #e4e6f0;
+      --text2: #9498ad;
+      --accent: #6c5ce7;
+      --accent2: #a29bfe;
+      --green: #00b894;
+      --green-bg: rgba(0,184,148,.12);
+      --red: #e17055;
+      --red-bg: rgba(225,112,85,.12);
+      --orange: #fdcb6e;
+      --orange-bg: rgba(253,203,110,.12);
+      --blue: #74b9ff;
+      --blue-bg: rgba(116,185,255,.12);
+      --radius: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 0;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 10;
+    }
+
+    .sidebar .logo {
+      padding: 0 1.5rem;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent2);
+      margin-bottom: 2rem;
+      letter-spacing: 1px;
+    }
+
+    .sidebar .logo span { color: var(--text2); font-weight: 400; font-size: .85rem; }
+
+    .nav-item {
+      padding: .75rem 1.5rem;
+      cursor: pointer;
+      color: var(--text2);
+      font-size: .9rem;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      transition: all .15s;
+      border-left: 3px solid transparent;
+    }
+
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { color: var(--accent2); border-left-color: var(--accent); background: rgba(108,92,231,.08); }
+
+    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    /* Main content */
+    .main {
+      margin-left: 240px;
+      flex: 1;
+      padding: 2rem;
+      max-width: 1100px;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    h2 { font-size: 1.5rem; margin-bottom: 1.5rem; font-weight: 600; }
+
+    /* Stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+    }
+
+    .stat-card .label { font-size: .8rem; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: .5rem; }
+    .stat-card .value { font-size: 2rem; font-weight: 700; }
+    .stat-card .value.green { color: var(--green); }
+    .stat-card .value.accent { color: var(--accent2); }
+    .stat-card .value.orange { color: var(--orange); }
+    .stat-card .value.blue { color: var(--blue); }
+
+    /* Table */
+    .toolbar {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .toolbar input[type="text"] {
+      flex: 1;
+      min-width: 200px;
+      padding: .6rem 1rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: .9rem;
+      outline: none;
+    }
+
+    .toolbar input[type="text"]:focus { border-color: var(--accent); }
+
+    .toolbar select {
+      padding: .6rem 1rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: .9rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .btn {
+      padding: .6rem 1.2rem;
+      border-radius: var(--radius);
+      border: none;
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+    }
+
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #5a4bd1; }
+    .btn-sm { padding: .4rem .8rem; font-size: .8rem; }
+    .btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+    .btn-danger { background: var(--red-bg); color: var(--red); }
+    .btn-danger:hover { background: rgba(225,112,85,.25); }
+    .btn-success { background: var(--green-bg); color: var(--green); }
+    .btn-success:hover { background: rgba(0,184,148,.25); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    th, td {
+      padding: .75rem 1rem;
+      text-align: left;
+      font-size: .85rem;
+    }
+
+    th {
+      background: var(--surface2);
+      color: var(--text2);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: .75rem;
+      letter-spacing: .5px;
+    }
+
+    tr { border-bottom: 1px solid var(--border); }
+    tr:last-child { border-bottom: none; }
+    tr:hover td { background: rgba(108,92,231,.04); }
+
+    .badge {
+      display: inline-block;
+      padding: .2rem .6rem;
+      border-radius: 20px;
+      font-size: .75rem;
+      font-weight: 600;
+    }
+
+    .badge-active { background: var(--green-bg); color: var(--green); }
+    .badge-inactive { background: var(--red-bg); color: var(--red); }
+    .badge-scheduled { background: var(--orange-bg); color: var(--orange); }
+    .badge-expired { background: rgba(100,100,120,.2); color: var(--text2); }
+    .badge-bogo { background: var(--blue-bg); color: var(--blue); }
+    .badge-percent { background: rgba(162,155,254,.12); color: var(--accent2); }
+
+    .actions { display: flex; gap: .4rem; }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text2);
+    }
+
+    .empty-state p { margin-bottom: 1rem; font-size: 1.1rem; }
+
+    /* Form */
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      max-width: 700px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-row.full { grid-template-columns: 1fr; }
+
+    .form-group { display: flex; flex-direction: column; gap: .35rem; }
+    .form-group label {
+      font-size: .8rem;
+      color: var(--text2);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: .6rem .85rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: .9rem;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus { border-color: var(--accent); }
+
+    .form-group textarea { resize: vertical; min-height: 80px; }
+
+    .form-section {
+      font-size: .9rem;
+      font-weight: 600;
+      color: var(--accent2);
+      margin: 1.5rem 0 .75rem;
+      padding-bottom: .5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: .75rem;
+      margin-top: 1.5rem;
+    }
+
+    .promo-type-selector {
+      display: flex;
+      gap: .75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .promo-type-btn {
+      flex: 1;
+      padding: 1.25rem;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface2);
+      cursor: pointer;
+      text-align: center;
+      transition: all .15s;
+    }
+
+    .promo-type-btn:hover { border-color: var(--accent); }
+    .promo-type-btn.selected { border-color: var(--accent); background: rgba(108,92,231,.1); }
+    .promo-type-btn .type-title { font-weight: 700; font-size: 1rem; color: var(--text); margin-bottom: .25rem; }
+    .promo-type-btn .type-desc { font-size: .8rem; color: var(--text2); }
+
+    #bogo-fields, #percent-fields { display: none; }
+
+    /* Detail modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.show { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 2rem;
+      width: 90%;
+      max-width: 550px;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    .modal h3 { font-size: 1.3rem; margin-bottom: .25rem; }
+    .modal .modal-type { margin-bottom: 1rem; }
+    .modal .detail-row { display: flex; justify-content: space-between; padding: .6rem 0; border-bottom: 1px solid var(--border); font-size: .9rem; }
+    .modal .detail-row .detail-label { color: var(--text2); }
+    .modal .detail-row .detail-value { font-weight: 600; }
+    .modal .modal-actions { display: flex; gap: .75rem; margin-top: 1.5rem; justify-content: flex-end; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">PromoEngine<br><span>Loyalty Platform</span></div>
+    <div class="nav-item active" data-page="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" data-page="promotions">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      Promotions
+    </div>
+    <div class="nav-item" data-page="create">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Create Promotion
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Dashboard -->
+    <div id="page-dashboard" class="page active">
+      <h2>Dashboard</h2>
+      <div class="stats">
+        <div class="stat-card"><div class="label">Active Promotions</div><div id="stat-active" class="value green">0</div></div>
+        <div class="stat-card"><div class="label">Total Created</div><div id="stat-total" class="value accent">0</div></div>
+        <div class="stat-card"><div class="label">Total Redemptions</div><div id="stat-redemptions" class="value blue">0</div></div>
+        <div class="stat-card"><div class="label">Scheduled</div><div id="stat-scheduled" class="value orange">0</div></div>
+      </div>
+
+      <h2>Recent Promotions</h2>
+      <div id="recent-promos"></div>
+    </div>
+
+    <!-- Promotions List -->
+    <div id="page-promotions" class="page">
+      <h2>All Promotions</h2>
+      <div class="toolbar">
+        <input type="text" id="search-input" placeholder="Search promotions...">
+        <select id="filter-type">
+          <option value="all">All Types</option>
+          <option value="bogo">BOGO</option>
+          <option value="percent">Percent Off</option>
+        </select>
+        <select id="filter-status">
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="expired">Expired</option>
+        </select>
+        <button class="btn btn-primary" onclick="navigateTo('create')">+ New Promo</button>
+      </div>
+      <div id="promo-table-wrapper"></div>
+    </div>
+
+    <!-- Create / Edit -->
+    <div id="page-create" class="page">
+      <h2 id="form-title">Create Promotion</h2>
+      <div class="form-card">
+        <div class="promo-type-selector">
+          <div class="promo-type-btn selected" data-type="bogo" onclick="selectType('bogo')">
+            <div class="type-title">BOGO</div>
+            <div class="type-desc">Buy One Get One — free or discounted</div>
+          </div>
+          <div class="promo-type-btn" data-type="percent" onclick="selectType('percent')">
+            <div class="type-title">% Off</div>
+            <div class="type-desc">Percentage discount on orders</div>
+          </div>
+        </div>
+
+        <form id="promo-form" onsubmit="savePromo(event)">
+          <input type="hidden" id="promo-id">
+
+          <div class="form-row full">
+            <div class="form-group">
+              <label>Promotion Name</label>
+              <input type="text" id="promo-name" required placeholder="e.g. Summer BOGO Blowout">
+            </div>
+          </div>
+
+          <div class="form-row full">
+            <div class="form-group">
+              <label>Description</label>
+              <textarea id="promo-desc" placeholder="Short description of this promotion..."></textarea>
+            </div>
+          </div>
+
+          <!-- BOGO fields -->
+          <div id="bogo-fields">
+            <div class="form-section">BOGO Details</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Buy Quantity</label>
+                <input type="number" id="bogo-buy" min="1" value="1" placeholder="1">
+              </div>
+              <div class="form-group">
+                <label>Get Quantity</label>
+                <input type="number" id="bogo-get" min="1" value="1" placeholder="1">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Discount on "Get" Item</label>
+                <select id="bogo-discount-type">
+                  <option value="free">Free (100% off)</option>
+                  <option value="percent">Custom % off</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Discount % (if custom)</label>
+                <input type="number" id="bogo-discount-value" min="1" max="100" value="50" placeholder="50">
+              </div>
+            </div>
+          </div>
+
+          <!-- Percent Off fields -->
+          <div id="percent-fields">
+            <div class="form-section">Discount Details</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Discount Percentage</label>
+                <input type="number" id="pct-value" min="1" max="100" value="10" placeholder="10">
+              </div>
+              <div class="form-group">
+                <label>Applies To</label>
+                <select id="pct-scope">
+                  <option value="order">Entire Order</option>
+                  <option value="category">Category</option>
+                  <option value="product">Specific Product</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Min. Purchase ($)</label>
+                <input type="number" id="pct-min" min="0" step="0.01" value="0" placeholder="0.00">
+              </div>
+              <div class="form-group">
+                <label>Category / Product (optional)</label>
+                <input type="text" id="pct-target" placeholder="e.g. Shoes, SKU-1234">
+              </div>
+            </div>
+          </div>
+
+          <!-- Shared fields -->
+          <div class="form-section">Schedule & Limits</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Start Date</label>
+              <input type="date" id="promo-start" required>
+            </div>
+            <div class="form-group">
+              <label>End Date</label>
+              <input type="date" id="promo-end" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Usage Limit (0 = unlimited)</label>
+              <input type="number" id="promo-limit" min="0" value="0" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label>Status</label>
+              <select id="promo-status">
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="scheduled">Scheduled</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Promotion</button>
+            <button type="button" class="btn btn-ghost" onclick="resetForm(); navigateTo('promotions')">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="modal-overlay" id="detail-modal" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <h3 id="modal-name"></h3>
+      <div id="modal-type" class="modal-type"></div>
+      <div id="modal-details"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Close</button>
+        <button class="btn btn-primary" id="modal-edit-btn">Edit</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── Data ──────────────────────────────────────────────
+    const STORAGE_KEY = 'promoengine_promotions';
+
+    function load() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    }
+
+    function save(promos) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(promos));
+    }
+
+    function genId() {
+      return 'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    }
+
+    // ── Navigation ───────────────────────────────────────
+    function navigateTo(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('page-' + page).classList.add('active');
+      document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
+
+      if (page === 'dashboard') renderDashboard();
+      if (page === 'promotions') renderTable();
+      if (page === 'create' && !document.getElementById('promo-id').value) resetForm();
+    }
+
+    document.querySelectorAll('.nav-item').forEach(n => {
+      n.addEventListener('click', () => navigateTo(n.dataset.page));
+    });
+
+    // ── Type selector ────────────────────────────────────
+    let selectedType = 'bogo';
+
+    function selectType(type) {
+      selectedType = type;
+      document.querySelectorAll('.promo-type-btn').forEach(b => b.classList.toggle('selected', b.dataset.type === type));
+      document.getElementById('bogo-fields').style.display = type === 'bogo' ? 'block' : 'none';
+      document.getElementById('percent-fields').style.display = type === 'percent' ? 'block' : 'none';
+    }
+
+    // ── Compute effective status ─────────────────────────
+    function effectiveStatus(promo) {
+      const now = new Date().toISOString().split('T')[0];
+      if (promo.status === 'inactive') return 'inactive';
+      if (promo.endDate < now) return 'expired';
+      if (promo.startDate > now) return 'scheduled';
+      if (promo.usageLimit > 0 && promo.redemptions >= promo.usageLimit) return 'expired';
+      return promo.status === 'scheduled' && promo.startDate <= now ? 'active' : promo.status;
+    }
+
+    // ── Dashboard ────────────────────────────────────────
+    function renderDashboard() {
+      const promos = load();
+      const statuses = promos.map(p => effectiveStatus(p));
+      document.getElementById('stat-total').textContent = promos.length;
+      document.getElementById('stat-active').textContent = statuses.filter(s => s === 'active').length;
+      document.getElementById('stat-scheduled').textContent = statuses.filter(s => s === 'scheduled').length;
+      document.getElementById('stat-redemptions').textContent = promos.reduce((s, p) => s + (p.redemptions || 0), 0);
+
+      const recent = promos.slice(-5).reverse();
+      const el = document.getElementById('recent-promos');
+      if (!recent.length) {
+        el.innerHTML = '<div class="empty-state"><p>No promotions yet.</p><button class="btn btn-primary" onclick="navigateTo(\'create\')">Create Your First Promo</button></div>';
+        return;
+      }
+      el.innerHTML = buildTable(recent);
+    }
+
+    // ── Promotions Table ─────────────────────────────────
+    function buildTable(promos) {
+      if (!promos.length) return '<div class="empty-state"><p>No promotions match your filters.</p></div>';
+
+      let html = `<table>
+        <thead><tr><th>Name</th><th>Type</th><th>Discount</th><th>Dates</th><th>Redeemed</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
+
+      for (const p of promos) {
+        const status = effectiveStatus(p);
+        const discountText = p.type === 'bogo'
+          ? `Buy ${p.bogoBuy} Get ${p.bogoGet} ${p.bogoDiscountType === 'free' ? 'Free' : p.bogoDiscountValue + '% off'}`
+          : `${p.pctValue}% off ${p.pctScope}${p.pctMin > 0 ? ' (min $' + p.pctMin + ')' : ''}`;
+
+        html += `<tr>
+          <td><strong style="cursor:pointer;color:var(--accent2)" onclick="showDetail('${p.id}')">${esc(p.name)}</strong></td>
+          <td><span class="badge badge-${p.type}">${p.type === 'bogo' ? 'BOGO' : '% Off'}</span></td>
+          <td>${discountText}</td>
+          <td>${p.startDate} — ${p.endDate}</td>
+          <td>${p.redemptions || 0}${p.usageLimit > 0 ? ' / ' + p.usageLimit : ''}</td>
+          <td><span class="badge badge-${status}">${status}</span></td>
+          <td class="actions">
+            <button class="btn btn-sm btn-ghost" onclick="editPromo('${p.id}')">Edit</button>
+            <button class="btn btn-sm btn-success" onclick="redeem('${p.id}')">+1</button>
+            <button class="btn btn-sm btn-danger" onclick="deletePromo('${p.id}')">Del</button>
+          </td>
+        </tr>`;
+      }
+
+      html += '</tbody></table>';
+      return html;
+    }
+
+    function renderTable() {
+      let promos = load();
+      const q = document.getElementById('search-input').value.toLowerCase();
+      const typeF = document.getElementById('filter-type').value;
+      const statusF = document.getElementById('filter-status').value;
+
+      if (q) promos = promos.filter(p => p.name.toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q));
+      if (typeF !== 'all') promos = promos.filter(p => p.type === typeF);
+      if (statusF !== 'all') promos = promos.filter(p => effectiveStatus(p) === statusF);
+
+      document.getElementById('promo-table-wrapper').innerHTML = buildTable(promos);
+    }
+
+    document.getElementById('search-input').addEventListener('input', renderTable);
+    document.getElementById('filter-type').addEventListener('change', renderTable);
+    document.getElementById('filter-status').addEventListener('change', renderTable);
+
+    // ── Save / Edit / Delete ─────────────────────────────
+    function savePromo(e) {
+      e.preventDefault();
+      const promos = load();
+      const id = document.getElementById('promo-id').value || genId();
+      const existing = promos.findIndex(p => p.id === id);
+
+      const promo = {
+        id,
+        name: document.getElementById('promo-name').value.trim(),
+        description: document.getElementById('promo-desc').value.trim(),
+        type: selectedType,
+        startDate: document.getElementById('promo-start').value,
+        endDate: document.getElementById('promo-end').value,
+        usageLimit: parseInt(document.getElementById('promo-limit').value) || 0,
+        status: document.getElementById('promo-status').value,
+        redemptions: existing >= 0 ? promos[existing].redemptions : 0,
+        createdAt: existing >= 0 ? promos[existing].createdAt : new Date().toISOString(),
+      };
+
+      if (selectedType === 'bogo') {
+        promo.bogoBuy = parseInt(document.getElementById('bogo-buy').value) || 1;
+        promo.bogoGet = parseInt(document.getElementById('bogo-get').value) || 1;
+        promo.bogoDiscountType = document.getElementById('bogo-discount-type').value;
+        promo.bogoDiscountValue = parseInt(document.getElementById('bogo-discount-value').value) || 50;
+      } else {
+        promo.pctValue = parseInt(document.getElementById('pct-value').value) || 10;
+        promo.pctScope = document.getElementById('pct-scope').value;
+        promo.pctMin = parseFloat(document.getElementById('pct-min').value) || 0;
+        promo.pctTarget = document.getElementById('pct-target').value.trim();
+      }
+
+      if (existing >= 0) promos[existing] = promo;
+      else promos.push(promo);
+
+      save(promos);
+      resetForm();
+      navigateTo('promotions');
+    }
+
+    function editPromo(id) {
+      const promo = load().find(p => p.id === id);
+      if (!promo) return;
+
+      document.getElementById('form-title').textContent = 'Edit Promotion';
+      document.getElementById('promo-id').value = promo.id;
+      document.getElementById('promo-name').value = promo.name;
+      document.getElementById('promo-desc').value = promo.description || '';
+      document.getElementById('promo-start').value = promo.startDate;
+      document.getElementById('promo-end').value = promo.endDate;
+      document.getElementById('promo-limit').value = promo.usageLimit;
+      document.getElementById('promo-status').value = promo.status;
+
+      selectType(promo.type);
+
+      if (promo.type === 'bogo') {
+        document.getElementById('bogo-buy').value = promo.bogoBuy;
+        document.getElementById('bogo-get').value = promo.bogoGet;
+        document.getElementById('bogo-discount-type').value = promo.bogoDiscountType;
+        document.getElementById('bogo-discount-value').value = promo.bogoDiscountValue;
+      } else {
+        document.getElementById('pct-value').value = promo.pctValue;
+        document.getElementById('pct-scope').value = promo.pctScope;
+        document.getElementById('pct-min').value = promo.pctMin;
+        document.getElementById('pct-target').value = promo.pctTarget || '';
+      }
+
+      navigateTo('create');
+    }
+
+    function deletePromo(id) {
+      if (!confirm('Delete this promotion?')) return;
+      const promos = load().filter(p => p.id !== id);
+      save(promos);
+      renderTable();
+      renderDashboard();
+    }
+
+    function redeem(id) {
+      const promos = load();
+      const promo = promos.find(p => p.id === id);
+      if (!promo) return;
+      promo.redemptions = (promo.redemptions || 0) + 1;
+      save(promos);
+      renderTable();
+    }
+
+    function resetForm() {
+      document.getElementById('form-title').textContent = 'Create Promotion';
+      document.getElementById('promo-form').reset();
+      document.getElementById('promo-id').value = '';
+      selectType('bogo');
+      // Set default dates
+      const today = new Date();
+      document.getElementById('promo-start').value = today.toISOString().split('T')[0];
+      const end = new Date(today);
+      end.setDate(end.getDate() + 30);
+      document.getElementById('promo-end').value = end.toISOString().split('T')[0];
+    }
+
+    // ── Detail Modal ─────────────────────────────────────
+    function showDetail(id) {
+      const promo = load().find(p => p.id === id);
+      if (!promo) return;
+
+      document.getElementById('modal-name').textContent = promo.name;
+      document.getElementById('modal-type').innerHTML = `<span class="badge badge-${promo.type}">${promo.type === 'bogo' ? 'BOGO' : '% Off'}</span> <span class="badge badge-${effectiveStatus(promo)}">${effectiveStatus(promo)}</span>`;
+      document.getElementById('modal-edit-btn').onclick = () => { closeModal(); editPromo(id); };
+
+      let details = '';
+      details += row('Description', promo.description || '—');
+
+      if (promo.type === 'bogo') {
+        details += row('Buy', promo.bogoBuy + ' item(s)');
+        details += row('Get', promo.bogoGet + ' item(s)');
+        details += row('At', promo.bogoDiscountType === 'free' ? 'FREE' : promo.bogoDiscountValue + '% off');
+      } else {
+        details += row('Discount', promo.pctValue + '% off');
+        details += row('Applies to', promo.pctScope);
+        if (promo.pctTarget) details += row('Target', promo.pctTarget);
+        if (promo.pctMin > 0) details += row('Min. purchase', '$' + promo.pctMin.toFixed(2));
+      }
+
+      details += row('Start', promo.startDate);
+      details += row('End', promo.endDate);
+      details += row('Usage limit', promo.usageLimit > 0 ? promo.usageLimit : 'Unlimited');
+      details += row('Redemptions', promo.redemptions || 0);
+      details += row('Created', new Date(promo.createdAt).toLocaleDateString());
+
+      document.getElementById('modal-details').innerHTML = details;
+      document.getElementById('detail-modal').classList.add('show');
+    }
+
+    function row(label, value) {
+      return `<div class="detail-row"><span class="detail-label">${label}</span><span class="detail-value">${esc(String(value))}</span></div>`;
+    }
+
+    function closeModal() {
+      document.getElementById('detail-modal').classList.remove('show');
+    }
+
+    // ── Util ─────────────────────────────────────────────
+    function esc(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    // ── Init ─────────────────────────────────────────────
+    selectType('bogo');
+    renderDashboard();
+  </script>
+</body>
+</html>
